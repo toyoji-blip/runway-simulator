@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>逃げ切り計算機 v1.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --bg2: #141720;
+    --bg3: #1c2030;
+    --border: #2a2f42;
+    --accent: #4ade80;
+    --accent2: #facc15;
+    --accent3: #f87171;
+    --accent4: #60a5fa;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #cbd5e1;
+    --success: #4ade80;
+    --warn: #facc15;
+    --danger: #f87171;
+    --radius: 12px;
+    --font-body: 'Noto Sans JP', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  header .tagline {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* ─── PANEL ─── */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .panel-title {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field-group {
+    margin-bottom: 16px;
+  }
+
+  .field-group label {
+    display: block;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 80px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .field-row .unit {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  input[type="number"], input[type="text"], select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="number"]:focus, input[type="text"]:focus, select:focus {
+    border-color: var(--accent4);
+  }
+
+  select {
+    cursor: pointer;
+  }
+
+  select option { background: var(--bg3); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0d0f14;
+    width: 100%;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px;
+    margin-top: 8px;
+  }
+
+  .btn-primary:hover { background: #22c55e; transform: translateY(-1px); }
+
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 11px;
+    background: var(--bg3);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  .btn-sm:hover { border-color: var(--accent4); color: var(--accent4); }
+
+  .btn-danger-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid #f8717133;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .btn-danger-sm:hover { background: #f8717122; }
+
+  /* ─── INCOME ITEMS ─── */
+  .income-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .income-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .income-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .income-item-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent4);
+  }
+
+  .income-item-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  .mini-field label {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .mini-field input {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  /* ─── RESULT AREA ─── */
+  .result-area {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .result-banner {
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .result-banner.success {
+    background: linear-gradient(135deg, #052e161a, #14532d22);
+    border: 1px solid #16a34a55;
+  }
+
+  .result-banner.danger {
+    background: linear-gradient(135deg, #450a0a1a, #7f1d1d22);
+    border: 1px solid #dc262655;
+  }
+
+  .result-banner.neutral {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+  }
+
+  .result-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .status-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .status-icon.ok { background: #052e1644; }
+  .status-icon.ng { background: #450a0a44; }
+
+  .status-label {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .status-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .result-min-balance {
+    text-align: right;
+  }
+
+  .result-min-balance .label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .result-min-balance .value {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+
+  /* ─── SCENARIO TABS ─── */
+  .scenario-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    width: fit-content;
+  }
+
+  .tab {
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .tab.active-base { background: var(--accent); color: #0d0f14; }
+  .tab.active-worse { background: var(--accent2); color: #0d0f14; }
+  .tab.active-worst { background: var(--accent3); color: #0d0f14; }
+  .tab:not(.active-base):not(.active-worse):not(.active-worst):hover { color: var(--text); }
+
+  /* ─── TABLE ─── */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  thead th {
+    background: var(--bg3);
+    padding: 10px 12px;
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+  }
+
+  thead th:first-child { text-align: left; }
+
+  tbody tr:nth-child(even) { background: #ffffff04; }
+  tbody tr:hover { background: #ffffff09; }
+
+  tbody td {
+    padding: 8px 12px;
+    text-align: right;
+    border-bottom: 1px solid #1c2030;
+    color: var(--text-dim);
+  }
+
+  tbody td:first-child { text-align: left; color: var(--text-muted); }
+
+  .td-balance-pos { color: var(--success); font-weight: 500; }
+  .td-balance-neg { color: var(--danger); font-weight: 700; }
+  .td-flow-pos { color: #86efac; }
+  .td-flow-neg { color: #fca5a5; }
+  .td-highlight { color: var(--text); }
+
+  /* ─── CHART ─── */
+  .chart-container {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  canvas { display: block; width: 100% !important; }
+
+  /* ─── SCENARIOS COMPARE ─── */
+  .scenario-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .scenario-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .scenario-card .sc-label {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .scenario-card .sc-rate {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .scenario-card .sc-result {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .sc-rate.base { color: var(--accent); }
+  .sc-rate.worse { color: var(--accent2); }
+  .sc-rate.worst { color: var(--accent3); }
+
+  .sc-result.ok { color: var(--accent); }
+  .sc-result.ng { color: var(--danger); }
+
+  /* ─── SEPARATOR ─── */
+  .sep {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  .text-xs { font-size: 11px; color: var(--text-muted); }
+  .mt-8 { margin-top: 8px; }
+  .mt-4 { margin-top: 4px; }
+
+  /* ─── IO BUTTONS ─── */
+  .btn-io {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .btn-io:hover { border-color: var(--accent4); color: var(--accent4); }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ─── DIVIDEND TOGGLE ─── */
+  .toggle-wrap {
+    display: flex;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .toggle-btn {
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .toggle-btn.active {
+    background: var(--accent4);
+    color: #0d0f14;
+  }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .scenario-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>逃げ切り計算機 <span style="font-size:13px;font-family:var(--font-mono);color:var(--accent4);font-weight:400;margin-left:4px">v1.2</span></h1>
+    <span class="tagline">// 100歳まで現金残高 &gt; 0 を維持できるか？</span>
+  </header>
+
+  <div class="layout">
+    <!-- ══════════════ LEFT: INPUTS ══════════════ -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- 基本設定 -->
+      <div class="panel">
+        <div class="panel-title">基本設定</div>
+
+        <div class="field-group">
+          <label>引退年齢</label>
+          <div class="field-row">
+            <input type="number" id="retireAge" value="60" min="40" max="80">
+            <span class="unit">歳</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>引退時の現金残高</label>
+          <div class="field-row">
+            <input type="number" id="initCash" value="2000" min="0">
+            <span class="unit">万円</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label style="margin-bottom:0">引退時の配当（年額）</label>
+            <div class="toggle-wrap" id="dividendToggle">
+              <button class="toggle-btn active" id="toggleAfter" onclick="setDividendMode('after')">税引き後</button>
+              <button class="toggle-btn" id="toggleBefore" onclick="setDividendMode('before')">税引き前</button>
+            </div>
+          </div>
+          <div class="field-row">
+            <input type="number" id="initDividend" value="500" min="0" oninput="updateDividendPreview()">
+            <span class="unit">万円</span>
+          </div>
+          <!-- 税率選択（税引き前モード時のみ表示） -->
+          <div id="taxRateRow" style="display:none;margin-top:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label style="font-size:11px;color:var(--text-muted);white-space:nowrap;margin-bottom:0">税率</label>
+              <select id="taxRate" onchange="updateDividendPreview()" style="flex:1">
+                <option value="20.315">20.315%（現行・特別）</option>
+                <option value="21">21%</option>
+                <option value="22">22%</option>
+                <option value="23">23%</option>
+                <option value="24">24%</option>
+                <option value="25">25%</option>
+                <option value="26">26%</option>
+                <option value="27">27%</option>
+                <option value="28">28%</option>
+                <option value="29">29%</option>
+                <option value="30">30%</option>
+                <option value="31">31%</option>
+                <option value="32">32%</option>
+                <option value="33">33%</option>
+              </select>
+            </div>
+            <div id="dividendPreview" style="margin-top:6px;font-size:12px;font-family:var(--font-mono);color:var(--accent4);padding:6px 10px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)">
+              → 税引き後: — 万円
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>年平均増配率</label>
+          <div class="field-row">
+            <input type="number" id="dividendGrowth" value="2.5" min="0" max="20" step="0.1">
+            <span class="unit">% / 年</span>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="field-group">
+          <label>引退初年度の生活費（翌年以降はインフレ率で増加）</label>
+          <div class="field-row">
+            <input type="number" id="livingCost" value="600" min="0">
+            <span class="unit">万円</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>初年度追加費用（住民税・医療費など）</label>
+          <div class="field-row">
+            <input type="number" id="firstYearExtra" value="150" min="0">
+            <span class="unit">万円</span>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="panel-title" style="margin-bottom:6px;">インフレ率シナリオ</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div class="field-group" style="margin-bottom:0">
+            <label style="color:var(--accent)">ベース</label>
+            <input type="number" id="inf1" value="2" min="0" max="20" step="0.5">
+          </div>
+          <div class="field-group" style="margin-bottom:0">
+            <label style="color:var(--accent2)">ワース</label>
+            <input type="number" id="inf2" value="3" min="0" max="20" step="0.5">
+          </div>
+          <div class="field-group" style="margin-bottom:0">
+            <label style="color:var(--accent3)">ワースト</label>
+            <input type="number" id="inf3" value="4" min="0" max="20" step="0.5">
+          </div>
+        </div>
+        <div class="text-xs mt-4" style="color:var(--text-muted)">単位: % / 年</div>
+      </div>
+
+      <!-- 収入項目 -->
+      <div class="panel">
+        <div class="panel-title">収入項目（オプション）</div>
+        <div class="income-list" id="incomeList"></div>
+        <button class="btn btn-sm mt-8" onclick="addIncomeItem()">＋ 収入項目を追加</button>
+        <div class="text-xs mt-8" style="color:var(--text-muted);line-height:1.7">
+          ※ <strong style="color:var(--accent2)">年額は税引き後の手取り額を入力してください。</strong><br>
+          年金や一時金など税金がかかる収入は、正確な計算が難しいためベストエフォートで構いません。楽観的に見積もるより、20%程度の税率を引いて悲観的に推定する方が安全です。<br>
+          単年の臨時収入は開始年齢と終了年齢を同じにしてください。同じ収入源でも受取額が年齢によって変わる場合は、期間ごとに別々の項目として登録してください。
+        </div>
+      </div>
+
+      <!-- ライフイベント出費 -->
+      <div class="panel">
+        <div class="panel-title">ライフイベント出費（オプション）</div>
+        <div class="income-list" id="eventList"></div>
+        <button class="btn btn-sm mt-8" onclick="addLifeEvent()">＋ ライフイベントを追加</button>
+        <div class="text-xs mt-8" style="color:var(--text-muted);line-height:1.7">
+          ※ 住宅リフォーム・子供の進学費用など、生活費とは別の一時的な出費を登録できます。<br>
+          <strong style="color:var(--accent2)">入力金額はインフレ連動なしの固定額です。</strong><br>
+          単年の出費は開始年齢と終了年齢を同じにしてください。複数年にわたり年額が異なる場合は、期間ごとに別々のイベントとして登録してください。
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="calculate()">▶ シミュレーション実行</button>
+
+      <!-- JSON Export/Import -->
+      <div class="panel" style="padding:16px 20px;">
+        <div class="panel-title" style="margin-bottom:12px;">設定の保存 / 読み込み</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button class="btn btn-io" onclick="exportSettings()">📤 エクスポート</button>
+          <label class="btn btn-io" style="justify-content:center;cursor:pointer;">
+            📥 インポート
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importSettings(event)">
+          </label>
+        </div>
+        <div id="ioMessage" style="display:none;margin-top:8px;font-size:11px;font-family:var(--font-mono);padding:6px 10px;border-radius:6px;"></div>
+      </div>
+    </div>
+
+  <!-- 命名ダイアログ -->
+  <div id="exportDialog" style="display:none;position:fixed;inset:0;background:#000000aa;z-index:100;align-items:center;justify-content:center;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:360px;max-width:90vw;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px;">設定を保存</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">ファイル名を入力してください（.json は自動付与）</div>
+      <input type="text" id="exportName" style="width:100%;margin-bottom:16px;" placeholder="例：ベースケース_62歳引退">
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-sm" onclick="closeExportDialog()">キャンセル</button>
+        <button class="btn" style="background:var(--accent4);color:#0d0f14;font-weight:700;padding:8px 20px;" onclick="doExport()">💾 保存</button>
+      </div>
+    </div>
+  </div>
+
+    <!-- ══════════════ RIGHT: RESULTS ══════════════ -->
+    <div class="result-area" id="resultArea">
+      <div class="panel" style="text-align:center;padding:40px 20px;color:var(--text-muted)">
+        <div style="font-size:36px;margin-bottom:12px;">📊</div>
+        <div style="font-size:14px;">左の設定を入力して「シミュレーション実行」を押してください</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ─── DIVIDEND TAX TOGGLE ─────────────────────────────
+let dividendMode = 'after'; // 'after' | 'before'
+
+function setDividendMode(mode) {
+  dividendMode = mode;
+  document.getElementById('toggleAfter').classList.toggle('active', mode === 'after');
+  document.getElementById('toggleBefore').classList.toggle('active', mode === 'before');
+  document.getElementById('taxRateRow').style.display = mode === 'before' ? 'block' : 'none';
+  updateDividendPreview();
+}
+
+function updateDividendPreview() {
+  if (dividendMode !== 'before') return;
+  const gross = +document.getElementById('initDividend').value || 0;
+  const taxRate = +document.getElementById('taxRate').value;
+  const net = gross * (1 - taxRate / 100);
+  document.getElementById('dividendPreview').textContent =
+    `→ 税引き後: ${fmt(Math.round(net))} 万円（税率 ${taxRate}%）`;
+}
+
+function getNetDividend() {
+  const gross = +document.getElementById('initDividend').value || 0;
+  if (dividendMode === 'after') return gross;
+  const taxRate = +document.getElementById('taxRate').value;
+  return gross * (1 - taxRate / 100);
+}
+
+// ─── STATE ───────────────────────────────────────────
+let incomeItems = [
+  { id: 1, name: '公的年金', amount: 0, startAge: 65, endAge: 100, singleYear: false },
+];
+let lifeEvents = [
+  { id: 1, name: '', amount: 0, startAge: 65, endAge: 65, singleYear: true },
+];
+let nextId = 2;
+let nextEventId = 2;
+let chartInstance = null;
+let activeScenario = 0;
+let lastResults = null;
+
+// ─── INCOME UI ───────────────────────────────────────
+function renderIncomeList() {
+  const list = document.getElementById('incomeList');
+  list.innerHTML = '';
+  incomeItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'income-item';
+    div.innerHTML = `
+      <div class="income-item-header">
+        <span class="income-item-name">📥 ${item.name || '（未入力）'}</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);cursor:pointer;white-space:nowrap">
+            <input type="checkbox" ${item.singleYear ? 'checked' : ''} onchange="toggleSingleYear('income',${item.id},this.checked)" style="width:auto;accent-color:var(--accent4)">
+            単年
+          </label>
+          <button class="btn-danger-sm" onclick="removeIncomeItem(${item.id})">✕ 削除</button>
+        </div>
+      </div>
+      <div class="income-item-fields" style="grid-template-columns:${item.singleYear ? '1fr 1fr 1fr' : '1fr 1fr 1fr 1fr'}">
+        <div class="mini-field">
+          <label>名称</label>
+          <input type="text" value="${item.name}" onchange="updateIncome(${item.id},'name',this.value);renderIncomeList()">
+        </div>
+        <div class="mini-field">
+          <label>年額（万円）</label>
+          <input type="number" value="${item.amount}" onchange="updateIncome(${item.id},'amount',+this.value)">
+        </div>
+        <div class="mini-field">
+          <label>${item.singleYear ? '受取年齢（歳）' : '開始年齢（歳）'}</label>
+          <input type="number" value="${item.startAge}" onchange="updateIncome(${item.id},'startAge',+this.value);if(${item.singleYear})updateIncome(${item.id},'endAge',+this.value)">
+        </div>
+        ${!item.singleYear ? `<div class="mini-field">
+          <label>終了年齢（歳）</label>
+          <input type="number" value="${item.endAge}" onchange="updateIncome(${item.id},'endAge',+this.value)">
+        </div>` : ''}
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function toggleSingleYear(type, id, checked) {
+  if (type === 'income') {
+    const item = incomeItems.find(i => i.id === id);
+    if (item) {
+      item.singleYear = checked;
+      if (checked) item.endAge = item.startAge;
+    }
+    renderIncomeList();
+  } else {
+    const item = lifeEvents.find(i => i.id === id);
+    if (item) {
+      item.singleYear = checked;
+      if (checked) item.endAge = item.startAge;
+    }
+    renderEventList();
+  }
+}
+
+function addIncomeItem() {
+  incomeItems.push({ id: nextId++, name: '', amount: 0, startAge: 65, endAge: 100, singleYear: false });
+  renderIncomeList();
+}
+
+function removeIncomeItem(id) {
+  incomeItems = incomeItems.filter(i => i.id !== id);
+  renderIncomeList();
+}
+
+function updateIncome(id, key, val) {
+  const item = incomeItems.find(i => i.id === id);
+  if (item) item[key] = val;
+}
+
+// ─── LIFE EVENTS UI ─────────────────────────────────
+function renderEventList() {
+  const list = document.getElementById('eventList');
+  list.innerHTML = '';
+  lifeEvents.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'income-item';
+    div.style.borderColor = '#f8717144';
+    div.innerHTML = `
+      <div class="income-item-header">
+        <span class="income-item-name" style="color:var(--accent3)">💸 ${item.name || '（未入力）'}</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);cursor:pointer;white-space:nowrap">
+            <input type="checkbox" ${item.singleYear ? 'checked' : ''} onchange="toggleSingleYear('event',${item.id},this.checked)" style="width:auto;accent-color:var(--accent3)">
+            単年
+          </label>
+          <button class="btn-danger-sm" onclick="removeLifeEvent(${item.id})">✕ 削除</button>
+        </div>
+      </div>
+      <div class="income-item-fields" style="grid-template-columns:${item.singleYear ? '1fr 1fr 1fr' : '1fr 1fr 1fr 1fr'}">
+        <div class="mini-field">
+          <label>名称</label>
+          <input type="text" value="${item.name}" onchange="updateLifeEvent(${item.id},'name',this.value);renderEventList()">
+        </div>
+        <div class="mini-field">
+          <label>年額（万円）</label>
+          <input type="number" value="${item.amount}" onchange="updateLifeEvent(${item.id},'amount',+this.value)">
+        </div>
+        <div class="mini-field">
+          <label>${item.singleYear ? '発生年齢（歳）' : '開始年齢（歳）'}</label>
+          <input type="number" value="${item.startAge}" onchange="updateLifeEvent(${item.id},'startAge',+this.value);if(${item.singleYear})updateLifeEvent(${item.id},'endAge',+this.value)">
+        </div>
+        ${!item.singleYear ? `<div class="mini-field">
+          <label>終了年齢（歳）</label>
+          <input type="number" value="${item.endAge}" onchange="updateLifeEvent(${item.id},'endAge',+this.value)">
+        </div>` : ''}
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function addLifeEvent() {
+  lifeEvents.push({ id: nextEventId++, name: '', amount: 0, startAge: 65, endAge: 65, singleYear: true });
+  renderEventList();
+}
+
+function removeLifeEvent(id) {
+  lifeEvents = lifeEvents.filter(i => i.id !== id);
+  renderEventList();
+}
+
+function updateLifeEvent(id, key, val) {
+  const item = lifeEvents.find(i => i.id === id);
+  if (item) item[key] = val;
+}
+
+// ─── SIMULATION ──────────────────────────────────────
+function simulate(params, inflationRate) {
+  const { retireAge, initCash, initDividend, dividendGrowth, livingCost, firstYearExtra } = params;
+  const rows = [];
+  const endAge = 100;
+
+  let cash = initCash;
+  let dividend = initDividend;
+  let cost = livingCost;
+
+  for (let age = retireAge; age <= endAge; age++) {
+    const year = age - retireAge; // 0-indexed
+
+    // Dividend grows each year after first
+    if (year > 0) dividend *= (1 + dividendGrowth / 100);
+
+    // Living cost: first year gets extra, then grows with inflation
+    let actualCost;
+    if (year === 0) {
+      actualCost = cost + firstYearExtra;
+    } else {
+      cost *= (1 + inflationRate / 100);
+      actualCost = cost;
+    }
+
+    // Extra income from income items
+    let extraIncome = 0;
+    incomeItems.forEach(item => {
+      if (age >= item.startAge && age <= item.endAge) {
+        extraIncome += item.amount;
+      }
+    });
+
+    const totalIncome = dividend + extraIncome;
+
+    // ライフイベント出費（インフレ連動なし・固定額）
+    let eventCost = 0;
+    lifeEvents.forEach(ev => {
+      if (age >= ev.startAge && age <= ev.endAge) {
+        eventCost += ev.amount;
+      }
+    });
+
+    const netFlow = totalIncome - actualCost - eventCost;
+
+    // 年初残高を記録してから収支を反映
+    rows.push({
+      age,
+      cash: Math.round(cash),        // 年初残高（その年を迎えた時点の残高）
+      dividend: Math.round(dividend),
+      extraIncome: Math.round(extraIncome),
+      totalIncome: Math.round(totalIncome),
+      cost: Math.round(actualCost),
+      eventCost: Math.round(eventCost),
+      netFlow: Math.round(netFlow),
+    });
+
+    cash += netFlow; // 収支反映は記録の後 → 翌年の年初残高へ
+  }
+
+  return rows;
+}
+
+function getParams() {
+  return {
+    retireAge: +document.getElementById('retireAge').value,
+    initCash: +document.getElementById('initCash').value,
+    initDividend: getNetDividend(),
+    dividendGrowth: +document.getElementById('dividendGrowth').value,
+    livingCost: +document.getElementById('livingCost').value,
+    firstYearExtra: +document.getElementById('firstYearExtra').value,
+  };
+}
+
+function calculate() {
+  const params = getParams();
+  const inf = [
+    +document.getElementById('inf1').value,
+    +document.getElementById('inf2').value,
+    +document.getElementById('inf3').value,
+  ];
+  const labels = ['ベース', 'ワース', 'ワースト'];
+  const colors = ['var(--accent)', 'var(--accent2)', 'var(--accent3)'];
+  const colorHex = ['#4ade80', '#facc15', '#f87171'];
+
+  const results = inf.map((rate, i) => ({
+    label: labels[i],
+    rate,
+    color: colors[i],
+    colorHex: colorHex[i],
+    rows: simulate(params, rate),
+  }));
+
+  lastResults = results;
+  activeScenario = 0;
+  renderResults(results, params, inf);
+}
+
+function renderResults(results, params, inf) {
+  const area = document.getElementById('resultArea');
+  area.innerHTML = '';
+
+  // Summary cards
+  const cards = document.createElement('div');
+  cards.className = 'scenario-cards';
+  results.forEach((r, i) => {
+    const minCash = Math.min(...r.rows.map(x => x.cash));
+    const minRow = r.rows.find(x => x.cash === minCash);
+    const survived = minCash >= 0;
+    // 失敗の場合：最初に残高がマイナスになる行を特定
+    const firstNegRow = r.rows.find(x => x.cash < 0);
+    const scResultHTML = survived
+      ? `<div class="sc-result ok">✓ 逃げ切り成功</div>
+         <div class="text-xs mt-4">最低残高: <span style="color:var(--success);font-family:var(--font-mono)">${fmt(minCash)}万円</span>（${minRow?.age}歳）</div>`
+      : `<div class="sc-result ng">✗ ${firstNegRow.age}歳で資金枯渇</div>
+         <div style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:var(--danger);margin-top:4px">${fmt(firstNegRow.cash)}万円</div>
+         <div class="text-xs mt-4" style="color:var(--text-muted)">${firstNegRow.age}歳時点の残高</div>`;
+    cards.innerHTML += `
+      <div class="scenario-card" style="border-color:${r.colorHex}33">
+        <div class="sc-label">インフレ ${r.rate}% ／ ${r.label}</div>
+        <div class="sc-rate ${['base','worse','worst'][i]}">${r.rate}%</div>
+        ${scResultHTML}
+      </div>
+    `;
+  });
+  area.appendChild(cards);
+
+  // Chart
+  const chartPanel = document.createElement('div');
+  chartPanel.className = 'chart-container';
+  chartPanel.innerHTML = '<canvas id="mainChart" height="220"></canvas>';
+  area.appendChild(chartPanel);
+
+  // Tabs + table
+  const tabRow = document.createElement('div');
+  tabRow.style.display = 'flex';
+  tabRow.style.justifyContent = 'space-between';
+  tabRow.style.alignItems = 'center';
+
+  const tabs = document.createElement('div');
+  tabs.className = 'scenario-tabs';
+  tabs.id = 'scenarioTabs';
+  results.forEach((r, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (i === 0 ? ' active-base' : '');
+    btn.textContent = `${r.rate}% ${r.label}`;
+    btn.onclick = () => switchTab(i);
+    tabs.appendChild(btn);
+  });
+  tabRow.appendChild(tabs);
+  area.appendChild(tabRow);
+
+  const tableWrap = document.createElement('div');
+  tableWrap.id = 'tableWrap';
+  area.appendChild(tableWrap);
+
+  renderChart(results);
+  renderTable(results[0], results[0].rate);
+}
+
+function switchTab(idx) {
+  activeScenario = idx;
+  const tabs = document.querySelectorAll('.tab');
+  const classes = ['active-base', 'active-worse', 'active-worst'];
+  tabs.forEach((t, i) => {
+    t.className = 'tab' + (i === idx ? ' ' + classes[idx] : '');
+  });
+  renderTable(lastResults[idx], lastResults[idx].rate);
+}
+
+function renderTable(result, rate) {
+  const wrap = document.getElementById('tableWrap');
+  const incomeCols = incomeItems.map(item =>
+    `<th>${item.name}<br><span style="font-size:9px;color:var(--text-muted)">${item.startAge}-${item.endAge}歳</span></th>`
+  ).join('');
+
+  const eventCols = lifeEvents.map(ev =>
+    `<th style="color:var(--accent3)">${ev.name}<br><span style="font-size:9px;color:var(--text-muted)">${ev.startAge}-${ev.endAge}歳</span></th>`
+  ).join('');
+  const hasEvents = lifeEvents.length > 0;
+
+  let html = `
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>年齢</th>
+          <th>配当収入</th>
+          ${incomeCols}
+          <th>生活費</th>
+          ${hasEvents ? eventCols : ''}
+          <th>年間収支</th>
+          <th>現金残高</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  result.rows.forEach(row => {
+    const balClass = row.cash >= 0 ? 'td-balance-pos' : 'td-balance-neg';
+    const flowClass = row.netFlow >= 0 ? 'td-flow-pos' : 'td-flow-neg';
+    const extraCols = incomeItems.map(item => {
+      const val = (row.age >= item.startAge && row.age <= item.endAge) ? item.amount : 0;
+      return `<td class="${val > 0 ? 'td-flow-pos' : ''}">${val > 0 ? fmt(val) : '—'}</td>`;
+    }).join('');
+    const evCols = lifeEvents.map(ev => {
+      const val = (row.age >= ev.startAge && row.age <= ev.endAge) ? ev.amount : 0;
+      return `<td class="${val > 0 ? 'td-flow-neg' : ''}" style="${val > 0 ? 'color:var(--accent3)' : ''}">${val > 0 ? '-' + fmt(val) : '—'}</td>`;
+    }).join('');
+
+    html += `
+      <tr>
+        <td>${row.age}歳</td>
+        <td class="td-highlight">${fmt(row.dividend)}</td>
+        ${extraCols}
+        <td>${fmt(row.cost)}</td>
+        ${hasEvents ? evCols : ''}
+        <td class="${flowClass}">${row.netFlow >= 0 ? '+' : ''}${fmt(row.netFlow)}</td>
+        <td class="${balClass}">${fmt(row.cash)}</td>
+      </tr>
+    `;
+  });
+
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+}
+
+function renderChart(results) {
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  if (chartInstance) { chartInstance.destroy(); }
+
+  const ages = results[0].rows.map(r => r.age + '歳');
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ages,
+      datasets: results.map(r => ({
+        label: `${r.rate}% ${r.label}`,
+        data: r.rows.map(x => x.cash),
+        borderColor: r.colorHex,
+        backgroundColor: r.colorHex + '18',
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.3,
+        fill: false,
+      }))
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: '#94a3b8', font: { size: 11, family: 'DM Mono' }, boxWidth: 16 }
+        },
+        tooltip: {
+          backgroundColor: '#1c2030',
+          borderColor: '#2a2f42',
+          borderWidth: 1,
+          titleColor: '#e2e8f0',
+          bodyColor: '#94a3b8',
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)}万円`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#cbd5e1', font: { size: 12, family: 'Noto Sans JP', weight: '500' }, maxTicksLimit: 20 },
+          grid: { color: '#2a2f4266' }
+        },
+        y: {
+          ticks: {
+            color: '#cbd5e1',
+            font: { size: 12, family: 'Noto Sans JP', weight: '500' },
+            callback: v => fmt(v) + '万'
+          },
+          grid: { color: '#2a2f4266' },
+        }
+      }
+    }
+  });
+}
+
+function fmt(n) {
+  if (n === undefined || n === null) return '—';
+  return Math.round(n).toLocaleString('ja-JP');
+}
+
+// ─── JSON EXPORT / IMPORT ────────────────────────────
+function gatherSettings() {
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    basic: {
+      retireAge: +document.getElementById('retireAge').value,
+      initCash: +document.getElementById('initCash').value,
+      initDividend: +document.getElementById('initDividend').value,
+      dividendMode: dividendMode,
+      taxRate: +document.getElementById('taxRate').value,
+      dividendGrowth: +document.getElementById('dividendGrowth').value,
+      livingCost: +document.getElementById('livingCost').value,
+      firstYearExtra: +document.getElementById('firstYearExtra').value,
+    },
+    inflation: {
+      base: +document.getElementById('inf1').value,
+      worse: +document.getElementById('inf2').value,
+      worst: +document.getElementById('inf3').value,
+    },
+    incomeItems: incomeItems.map(i => ({ ...i })),
+    lifeEvents: lifeEvents.map(i => ({ ...i })),
+  };
+}
+
+function exportSettings() {
+  // デフォルト名生成
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const age = document.getElementById('retireAge').value;
+  document.getElementById('exportName').value = `逃げ切り設定_${age}歳引退_${today}`;
+  const dlg = document.getElementById('exportDialog');
+  dlg.style.display = 'flex';
+  setTimeout(() => document.getElementById('exportName').select(), 50);
+}
+
+function closeExportDialog() {
+  document.getElementById('exportDialog').style.display = 'none';
+}
+
+function doExport() {
+  const name = document.getElementById('exportName').value.trim() || '逃げ切り設定';
+  const settings = gatherSettings();
+  settings.name = name;
+  const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  closeExportDialog();
+  showIOMessage('✓ 「' + name + '」を保存しました', 'success');
+}
+
+function importSettings(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const s = JSON.parse(e.target.result);
+      if (!s.basic || !s.inflation || !s.incomeItems) throw new Error('invalid');
+
+      // 基本設定
+      document.getElementById('retireAge').value = s.basic.retireAge;
+      document.getElementById('initCash').value = s.basic.initCash;
+      document.getElementById('initDividend').value = s.basic.initDividend;
+      document.getElementById('dividendGrowth').value = s.basic.dividendGrowth;
+      document.getElementById('livingCost').value = s.basic.livingCost;
+      document.getElementById('firstYearExtra').value = s.basic.firstYearExtra;
+
+      // 配当モード・税率
+      setDividendMode(s.basic.dividendMode || 'after');
+      if (s.basic.taxRate) document.getElementById('taxRate').value = s.basic.taxRate;
+      updateDividendPreview();
+
+      // インフレ
+      document.getElementById('inf1').value = s.inflation.base;
+      document.getElementById('inf2').value = s.inflation.worse;
+      document.getElementById('inf3').value = s.inflation.worst;
+
+      // 収入項目
+      incomeItems = s.incomeItems.map(i => ({ ...i }));
+      nextId = Math.max(...incomeItems.map(i => i.id), 0) + 1;
+      renderIncomeList();
+
+      // ライフイベント
+      lifeEvents = (s.lifeEvents || []).map(i => ({ ...i }));
+      nextEventId = Math.max(...lifeEvents.map(i => i.id), 0) + 1;
+      renderEventList();
+
+      const label = s.name ? `「${s.name}」` : 'ファイル';
+      showIOMessage('✓ ' + label + ' を読み込みました。シミュレーションを実行してください。', 'success');
+    } catch {
+      showIOMessage('✗ 読み込みに失敗しました。正しいJSONファイルか確認してください。', 'error');
+    }
+    event.target.value = ''; // reset file input
+  };
+  reader.readAsText(file);
+}
+
+function showIOMessage(msg, type) {
+  const el = document.getElementById('ioMessage');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = type === 'success' ? '#052e1644' : '#450a0a44';
+  el.style.color = type === 'success' ? 'var(--accent)' : 'var(--danger)';
+  el.style.border = '1px solid ' + (type === 'success' ? '#16a34a55' : '#dc262655');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+// ─── INIT ─────────────────────────────────────────────
+renderIncomeList();
+renderEventList();
+</script>
+</body>
+</html>
