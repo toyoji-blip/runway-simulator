@@ -53,11 +53,18 @@
 
   header {
     display: flex;
-    align-items: baseline;
+    align-items: center;
+    justify-content: space-between;
     gap: 16px;
     margin-bottom: 32px;
     border-bottom: 1px solid var(--border);
     padding-bottom: 20px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
   }
 
   header h1 {
@@ -479,6 +486,151 @@
   }
   .btn-io:hover { border-color: var(--accent4); color: var(--accent4); }
 
+  /* ─── HELP MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000000bb;
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 720px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .modal-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    line-height: 1;
+  }
+
+  .modal-close:hover { background: var(--bg3); color: var(--text); }
+
+  .modal-body {
+    overflow-y: auto;
+    padding: 24px;
+    line-height: 1.8;
+  }
+
+  .modal-body h3 {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color: var(--accent4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 20px 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-body h3:first-child { margin-top: 0; }
+
+  .modal-body p {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .modal-body ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 8px;
+  }
+
+  .modal-body ul li {
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 3px 0 3px 16px;
+    position: relative;
+  }
+
+  .modal-body ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent4);
+  }
+
+  .modal-body .warn {
+    background: #facc1511;
+    border: 1px solid #facc1533;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+
+  .modal-body .tip {
+    background: #4ade8011;
+    border: 1px solid #4ade8033;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .modal-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 8px;
+    white-space: normal;
+  }
+
+  .modal-body table th {
+    background: var(--bg3);
+    padding: 7px 10px;
+    text-align: left;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    position: static;
+  }
+
+  .modal-body table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #1c2030;
+    color: var(--text-dim);
+    text-align: left;
+  }
+
   /* ─── SCROLLBAR ─── */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
@@ -522,8 +674,13 @@
 <body>
 <div class="container">
   <header>
-    <h1>逃げ切り計算機 <span style="font-size:13px;font-family:var(--font-mono);color:var(--accent4);font-weight:400;margin-left:4px">v1.2</span></h1>
-    <span class="tagline">// 100歳まで現金残高 &gt; 0 を維持できるか？</span>
+    <div class="header-left">
+      <h1>逃げ切り計算機 <span style="font-size:13px;font-family:var(--font-mono);color:var(--accent4);font-weight:400;margin-left:4px">v1.2</span></h1>
+      <span class="tagline">// 100歳まで現金残高 &gt; 0 を維持できるか？</span>
+    </div>
+    <button class="btn-help" onclick="document.getElementById('helpModal').classList.add('open')">
+      ❓ ヘルプ / Help
+    </button>
   </header>
 
   <div class="layout">
@@ -684,6 +841,73 @@
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn btn-sm" onclick="closeExportDialog()">キャンセル</button>
         <button class="btn" style="background:var(--accent4);color:#0d0f14;font-weight:700;padding:8px 20px;" onclick="doExport()">💾 保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ヘルプモーダル -->
+  <div class="modal-overlay" id="helpModal" onclick="closeHelpModal(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>📖 使い方ガイド / Help</h2>
+        <button class="modal-close" onclick="document.getElementById('helpModal').classList.remove('open')">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <div class="warn">⚠️ 本ツールはシミュレーション目的のみです。計算結果は保証されません。投資・財務の判断はご自身の責任で行ってください。</div>
+
+        <h3>基本的な使い方</h3>
+        <ul>
+          <li>HTMLファイルをダウンロードしてブラウザで開く（インストール不要）</li>
+          <li>左側の設定を入力して「▶ シミュレーション実行」を押す</li>
+          <li>設定は「📤 エクスポート」でJSONファイルに保存できます</li>
+          <li>次回は「📥 インポート」で設定を復元してから実行してください</li>
+          <li><strong style="color:var(--accent2)">設定はブラウザを閉じると消えます。必ずエクスポートして保存してください。</strong></li>
+        </ul>
+
+        <h3>基本設定</h3>
+        <table>
+          <tr><th>項目</th><th>説明</th></tr>
+          <tr><td>引退年齢</td><td>シミュレーション開始年齢</td></tr>
+          <tr><td>現金残高</td><td>引退時点の手元現金（万円）</td></tr>
+          <tr><td>配当（年額）</td><td>年間配当収入。税引き後 / 税引き前を選択可能</td></tr>
+          <tr><td>年平均増配率</td><td>毎年の配当成長率（%）</td></tr>
+          <tr><td>初年度生活費</td><td>基準となる年間生活費。翌年以降はインフレ率で増加</td></tr>
+          <tr><td>初年度追加費用</td><td>引退初年度のみ加算（住民税急増・健康保険料など）</td></tr>
+          <tr><td>インフレ率</td><td>3つのシナリオを設定。ベース・ワース・ワーストで同時比較</td></tr>
+        </table>
+
+        <h3>収入項目（オプション）</h3>
+        <p>配当以外の収入を追加できます。<strong style="color:var(--accent2)">必ず税引き後の手取り額を入力してください。</strong></p>
+        <div class="tip">💡 税額が不明な場合はベストエフォートで。楽観的より悲観的（約20%控除）に見積もる方が安全です。</div>
+        <ul>
+          <li>単年の臨時収入は「単年」チェックをONにする</li>
+          <li>同じ収入源でも年齢で金額が変わる場合は、期間ごとに別々の項目として登録する</li>
+          <li>例：公的年金・企業年金・iDeCo・小規模共済・退職金・遺産相続など</li>
+        </ul>
+
+        <h3>ライフイベント出費（オプション）</h3>
+        <p>生活費とは別の計画的な出費を登録できます。<strong style="color:var(--accent2)">インフレ連動なしの固定額です。</strong></p>
+        <ul>
+          <li>単年の出費は「単年」チェックをONにする</li>
+          <li>複数年で年額が異なる場合は、期間ごとに別々のイベントとして登録する</li>
+          <li>例：住宅リフォーム・老健施設入居金・子供の進学費用・奨学金拠出など</li>
+        </ul>
+
+        <h3>設計思想</h3>
+        <p>本ツールは意図的に<strong style="color:var(--accent2)">悲観的</strong>に設計されています。</p>
+        <ul>
+          <li>収入は配当のみ。株式資産（元本）の取り崩しは一切考慮しない</li>
+          <li>税金は生活費に含まれない想定。収入はすべて税引き後で入力する</li>
+          <li>株式資産の取り崩しシミュレーションには非対応</li>
+          <li>100歳まで現金残高 &gt; 0 を維持できれば「逃げ切り成功」</li>
+        </ul>
+
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">
+          逃げ切り計算機 v1.2 — CC BY-NC-ND 4.0 — 
+          <a href="https://github.com/toyoji-blip/runway-simulator" target="_blank" style="color:var(--accent4)">GitHub</a>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1270,6 +1494,13 @@ function showIOMessage(msg, type) {
   el.style.border = '1px solid ' + (type === 'success' ? '#16a34a55' : '#dc262655');
   clearTimeout(el._timer);
   el._timer = setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+// ─── HELP MODAL ──────────────────────────────────────
+function closeHelpModal(e) {
+  if (e.target === document.getElementById('helpModal')) {
+    document.getElementById('helpModal').classList.remove('open');
+  }
 }
 
 // ─── INIT ─────────────────────────────────────────────
