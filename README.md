@@ -25,6 +25,15 @@ The "Retirement Survival Calculator" simulates whether your post-retirement asse
 
 ---
 
+## ⬇️ ダウンロード / Download
+
+**[▶ 最新版をダウンロード / Download Latest Version](https://github.com/toyoji-blip/runway-simulator/releases/latest/download/retirement_calculator.html)**
+
+ダウンロードしたHTMLファイルをブラウザで開くだけで使えます。インストール不要です。  
+Download the HTML file and open it in any browser. No installation required.
+
+---
+
 ## 特徴 / Features
 
 **日本語**
